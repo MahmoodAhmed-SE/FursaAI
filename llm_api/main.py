@@ -1,6 +1,11 @@
 import pipeutils
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter, HTTPException, Header, Depends
+from fastapi.responses import JSONResponse
+
+from pydantic import BaseModel
+
+
 # from transformers import pipeline
 
 
@@ -21,3 +26,29 @@ from fastapi import FastAPI
 
 
 app = FastAPI()
+
+
+class ExtractionRequestBody(BaseModel):
+    content: str
+
+
+async def verify_jwt(authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    print("Auth exists:", authorization)
+    # TODO: verify JWT here
+    return authorization
+
+
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(verify_jwt)])
+
+
+@router.post("/extract-jobs")
+async def extractJobs(extractReqBody: ExtractionRequestBody):
+    return {
+        "message": "Hello world"
+    }
+
+
+
+app.include_router(router)
